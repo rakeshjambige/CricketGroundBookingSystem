@@ -1,0 +1,23 @@
+# Spring Boot sensitive files
+**/application.properties
+**/application.yml
+
+# Maven build files
+**/target/
+
+# React dependencies
+bookmyground-frontend/node_modules/
+
+# React environment files
+bookmyground-frontend/.env
+
+# Eclipse files
+.classpath
+.project
+.settings/
+
+# VS Code files
+.vscode/
+
+# Logs
+*.log

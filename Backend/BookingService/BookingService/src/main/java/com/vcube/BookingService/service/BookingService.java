@@ -14,130 +14,344 @@ import com.vcube.BookingService.dto.BookingResponseDto;
 import com.vcube.BookingService.dto.GroundDto;
 import com.vcube.BookingService.dto.UserDto;
 import com.vcube.BookingService.entity.BookingEntity;
+import com.vcube.BookingService.entity.BookingSlot;
 import com.vcube.BookingService.kafka.BookingEventProducer;
 import com.vcube.BookingService.repository.BookingRepository;
+import com.vcube.BookingService.repository.BookingSlotRepository;
 
 @Service
 public class BookingService {
 
+
     @Autowired
     private BookingRepository bookingRepository;
+
+
+    @Autowired
+    private BookingSlotRepository bookingSlotRepository;
+
 
     @Autowired
     private BookingEventProducer eventProducer;
 
+
     @Autowired
     private RestTemplate restTemplate;
 
+
+
     private static final String USER_SERVICE_URL =
             "http://localhost:9090/api/userauth/{userId}";
-//
-//    private static final String GROUND_SERVICE_URL =
-//            "http://localhost:9191/api/grounds/findGroundById/{groundId}";
+
+
     private static final String GROUND_SERVICE_URL =
-            "http://localhost:9191/api/grounds/findGroundById/{id}"; // <-- {id}, not {groundId}
+            "http://localhost:9191/api/grounds/findGroundById/{id}";
+
+
 
     // ================= CREATE BOOKING =================
+
     @Transactional
     public BookingResponseDto createBooking(BookingRequestDto dto) {
 
-        // Check for slot conflicts
-        List<BookingEntity> conflicts = bookingRepository.findConflictingBookings(
-                dto.getGroundId(),
-                dto.getBookingDate(),
-                dto.getSlots()
-        );
 
-        if (!conflicts.isEmpty()) {
-            throw new RuntimeException("Selected slots are not available");
+        // 1. Check already booked slots
+
+        List<BookingSlot> existingSlots =
+                bookingSlotRepository.findByGroundIdAndBookingDateAndSlotIn(
+                        dto.getGroundId(),
+                        dto.getBookingDate(),
+                        dto.getSlots()
+                );
+
+
+        if (!existingSlots.isEmpty()) {
+
+            throw new RuntimeException(
+                    "Selected slots are already booked"
+            );
         }
 
-        // Save booking
+
+
+        // 2. Create Booking
+
         BookingEntity booking = new BookingEntity();
+
+
         booking.setUserId(dto.getUserId());
+
         booking.setGroundId(dto.getGroundId());
+
         booking.setBookingDate(dto.getBookingDate());
-        booking.setBookedSlots(dto.getSlots());
+
         booking.setTotalPrice(dto.getTotalPrice());
+
         booking.setStatus("CONFIRMED");
 
-        BookingEntity saved = bookingRepository.save(booking);
 
-        // Convert to DTO and enrich with user email & ground name
-        BookingResponseDto response = enrichBookingDto(saved);
 
-        // Send event to Kafka
+        // 3. Create individual slots
+
+        List<BookingSlot> bookingSlots =
+                dto.getSlots()
+                .stream()
+                .map(slot -> {
+
+
+                    BookingSlot bookingSlot = new BookingSlot();
+
+
+                    bookingSlot.setGroundId(
+                            dto.getGroundId()
+                    );
+
+
+                    bookingSlot.setBookingDate(
+                            dto.getBookingDate()
+                    );
+
+
+                    bookingSlot.setSlot(slot);
+
+
+                    bookingSlot.setBooking(booking);
+
+
+                    return bookingSlot;
+
+
+                })
+                .collect(Collectors.toList());
+
+
+
+        booking.setSlots(bookingSlots);
+
+
+
+        // 4. Save booking + slots
+
+        BookingEntity savedBooking =
+                bookingRepository.save(booking);
+
+
+
+        // 5. Prepare response
+
+        BookingResponseDto response =
+                enrichBookingDto(savedBooking);
+
+
+
+        // 6. Kafka event
+
         eventProducer.sendBookingEvent(response);
 
+
+
         return response;
+
     }
 
+
+
+
     // ================= GET BOOKINGS BY USER =================
+
+
     public List<BookingResponseDto> getBookingsByUser(int userId) {
-        return bookingRepository.findByUserId(userId)
+
+
+        return bookingRepository
+                .findByUserId(userId)
                 .stream()
                 .map(this::enrichBookingDto)
                 .collect(Collectors.toList());
+
     }
+
+
+
+
 
     // ================= GET BOOKED SLOTS =================
-    public List<String> getSlotsByGroundAndDate(int groundId, String dateStr) {
-        LocalDate date = LocalDate.parse(dateStr);
-        return bookingRepository.findByGroundIdAndBookingDate(groundId, date)
+
+
+    public List<String> getSlotsByGroundAndDate(
+            int groundId,
+            String dateStr) {
+
+
+        LocalDate date =
+                LocalDate.parse(dateStr);
+
+
+
+        return bookingSlotRepository
+                .findByGroundIdAndBookingDate(
+                        groundId,
+                        date
+                )
                 .stream()
-                .flatMap(b -> b.getBookedSlots().stream())
+                .map(BookingSlot::getSlot)
                 .collect(Collectors.toList());
+
     }
 
-    // ================= ENRICH BOOKING DTO =================
-    private BookingResponseDto enrichBookingDto(BookingEntity b) {
-        String userEmail = fetchUserEmail(b.getUserId());
-        String groundName = fetchGroundName(b.getGroundId());
+
+
+
+
+
+
+    // ================= ENRICH RESPONSE =================
+
+
+    private BookingResponseDto enrichBookingDto(
+            BookingEntity booking) {
+
+
+        String userEmail =
+                fetchUserEmail(
+                        booking.getUserId()
+                );
+
+
+        String groundName =
+                fetchGroundName(
+                        booking.getGroundId()
+                );
+
+
+
+        List<String> slots =
+                booking.getSlots()
+                .stream()
+                .map(BookingSlot::getSlot)
+                .collect(Collectors.toList());
+
+
 
         return new BookingResponseDto(
-                b.getBookingId(),
-                b.getUserId(),
-                b.getGroundId(),
+
+                booking.getBookingId(),
+
+                booking.getUserId(),
+
+                booking.getGroundId(),
+
                 groundName,
-                b.getBookingDate(),
-                b.getBookedSlots(),
-                b.getTotalPrice(),
-                b.getStatus(),
+
+                booking.getBookingDate(),
+
+                slots,
+
+                booking.getTotalPrice(),
+
+                booking.getStatus(),
+
                 userEmail
+
         );
+
     }
 
- // ================= FETCH USER EMAIL =================
+
+
+
+
+
+
+    // ================= FETCH USER EMAIL =================
+
+
     private String fetchUserEmail(int userId) {
+
+
         try {
-            UserDto user = restTemplate.getForObject(USER_SERVICE_URL, UserDto.class, userId);
-            if (user != null && user.getEmail() != null) {
+
+
+            UserDto user =
+                    restTemplate.getForObject(
+                            USER_SERVICE_URL,
+                            UserDto.class,
+                            userId
+                    );
+
+
+            if(user != null &&
+               user.getEmail()!=null) {
+
+
                 return user.getEmail();
+
             }
-        } catch (Exception e) {
-            System.out.println("Failed to fetch user email: " + e.getMessage());
+
+
         }
+        catch(Exception e) {
+
+
+            System.out.println(
+                    "Failed to fetch user email : "
+                    + e.getMessage()
+            );
+
+        }
+
+
         return "default@example.com";
+
     }
 
-   
- // ================= FETCH GROUND NAME =================
-  
-    
+
+
+
+
+
+
+    // ================= FETCH GROUND NAME =================
+
 
     private String fetchGroundName(int groundId) {
+
+
         try {
-            GroundDto ground = restTemplate.getForObject(GROUND_SERVICE_URL, GroundDto.class, groundId);
-            if (ground != null && ground.getName() != null) {
+
+
+            GroundDto ground =
+                    restTemplate.getForObject(
+                            GROUND_SERVICE_URL,
+                            GroundDto.class,
+                            groundId
+                    );
+
+
+            if(ground != null &&
+               ground.getName()!=null) {
+
+
                 return ground.getName();
+
             }
-        } catch (Exception e) {
-            System.out.println("Failed to fetch ground name: " + e.getMessage());
+
+
         }
+        catch(Exception e) {
+
+
+            System.out.println(
+                    "Failed to fetch ground name : "
+                    + e.getMessage()
+            );
+
+        }
+
+
         return "Unknown Ground";
+
     }
-
-
 
 
 }

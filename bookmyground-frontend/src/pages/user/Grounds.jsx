@@ -14,6 +14,7 @@ function Grounds() {
   const [bookings, setBookings] = useState([]);
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
   const [index, setIndex] = useState(0);
 
   // Generate 1-hour slots from 6 AM to 1 AM
@@ -85,32 +86,54 @@ useEffect(() => {
   };
 
   const handleConfirmBooking = async () => {
+
+    if (bookingLoading) return; // prevent double click
+
     if (!user) {
       alert("Please login to book");
       navigate("/login");
       return;
     }
+
     if (selectedSlots.length === 0) {
       alert("Select at least one slot");
       return;
     }
+
     try {
+      setBookingLoading(true);
+
       await axios.post(
         "http://localhost:8081/api/bookings",
-        { userId: user.id, groundId: ground.id, bookingDate: date, slots: selectedSlots, totalPrice: selectedSlots.length * 500 },
-        { headers: { Authorization: `Bearer ${getToken()}` } }
+        {
+          userId: user.id,
+          groundId: ground.id,
+          bookingDate: date,
+          slots: selectedSlots,
+          totalPrice: selectedSlots.length * ground.pricePerHour
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`
+          }
+        }
       );
+
       alert("Booking confirmed!");
 
-setSelectedSlots([]);
+      setSelectedSlots([]);
 
-// Refresh booked slots immediately
-await fetchSlots();
+      // Refresh booked slots immediately
+      await fetchSlots();
+
     } catch (err) {
       console.error(err);
       alert("Booking failed");
+
+    } finally {
+      setBookingLoading(false);
     }
-  };
+};
 
   if (!ground) return <p className="text-center mt-5 pt-5">Loading ground...</p>;
 
@@ -205,13 +228,12 @@ await fetchSlots();
 
         <div className="mt-3 text-end">
           <button
-            className="btn btn-success"
-            onClick={handleConfirmBooking}
-            
-            disabled={selectedSlots.length === 0}
-          >
-            Confirm Booking
-          </button>
+  className="btn btn-success"
+  onClick={handleConfirmBooking}
+  disabled={selectedSlots.length === 0 || bookingLoading}
+>
+  {bookingLoading ? "Processing..." : "Confirm Booking"}
+</button>
         </div>
       </div>
     </div>

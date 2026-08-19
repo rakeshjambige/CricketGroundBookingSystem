@@ -1,0 +1,100 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: cricket-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cricketbookingsystem
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  kafka:
+    image: apache/kafka:4.0.0
+    container_name: cricket-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+  user-auth-service:
+    build:
+      context: ./Backend/UserAndAuthService/UserAndAuthService
+      dockerfile: Dockerfile
+    image: user-auth-service:latest
+    container_name: user-auth-service
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    depends_on:
+      - mysql
+
+  ground-service:
+    build:
+      context: ./Backend/GroundService/GroundService
+      dockerfile: Dockerfile
+    image: ground-service:latest
+    container_name: ground-service
+    restart: unless-stopped
+    ports:
+      - "9191:9191"
+    depends_on:
+      - mysql
+
+  booking-service:
+    build:
+      context: ./Backend/BookingService/BookingService
+      dockerfile: Dockerfile
+    image: booking-service:latest
+    container_name: booking-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - mysql
+      - kafka
+
+  notification-service:
+    build:
+      context: ./Backend/NotificationService/NotificationService
+      dockerfile: Dockerfile
+    image: notification-service:latest
+    container_name: notification-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - kafka
+  frontend:
+    build:
+      context: ./bookmyground-frontend
+      dockerfile: Dockerfile
+    container_name: bookmyground-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - booking-service
+      - ground-service
+      - user-auth-service
+      - notification-service
+
+volumes:
+  mysql-data:

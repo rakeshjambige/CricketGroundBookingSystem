@@ -20,12 +20,13 @@ import com.vcube.BookingService.dto.BookingResponseDto;
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<String,BookingResponseDto> producerFactory(){
-        Map<String,Object> config = new HashMap<>();
+    public ProducerFactory<String, BookingResponseDto> producerFactory() {
+        Map<String, Object> config = new HashMap<>();
 
-        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka:9092");
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class); // Correct Kafka serializer
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);  // For objects like BookingEntity
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class); // For objects like
+                                                                                        // BookingEntity
 
         return new DefaultKafkaProducerFactory<>(config);
     }
@@ -34,6 +35,7 @@ public class KafkaProducerConfig {
     public KafkaTemplate<String, BookingResponseDto> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
+
     // ✅ Add RestTemplate bean here
     @Bean
     public RestTemplate restTemplate() {

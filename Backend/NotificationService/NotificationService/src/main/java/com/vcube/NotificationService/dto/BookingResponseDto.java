@@ -2,6 +2,7 @@ package com.vcube.NotificationService.dto;
 
 import java.time.LocalDate;
 import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +15,7 @@ public class BookingResponseDto {
     private Long bookingId;
     private int userId;
     private int groundId;
+    private String userName;
     private String groundName;
     private LocalDate bookingDate;
     private List<String> bookedSlots;
@@ -21,4 +23,3 @@ public class BookingResponseDto {
     private String status;
     private String userEmail;
 }
-

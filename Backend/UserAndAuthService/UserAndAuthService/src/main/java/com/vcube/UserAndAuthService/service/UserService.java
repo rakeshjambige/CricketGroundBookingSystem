@@ -38,9 +38,9 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         // 3️⃣ Set role from frontend, default USER
-        if (user.getRole() == null) {
-            user.setRole(Role.USER);
-        }
+        // Always assign USER during public registration.
+        // Never trust the role sent by the frontend.
+        user.setRole(Role.USER);
 
         // 4️⃣ Save user
         return userRepo.save(user);
@@ -66,7 +66,7 @@ public class UserService {
 
         return response;
     }
-    
+
     public User getUserById(int id) {
         return userRepo.findById(id);
     }

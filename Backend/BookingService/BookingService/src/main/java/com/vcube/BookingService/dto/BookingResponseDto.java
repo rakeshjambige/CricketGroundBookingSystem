@@ -13,7 +13,8 @@ public class BookingResponseDto {
     private Long bookingId;
     private int userId;
     private int groundId;
-    private String groundName;   // ✅ ADD THIS
+    private String userName;
+    private String groundName; // ✅ ADD THIS
     private LocalDate bookingDate;
     private List<String> bookedSlots;
     private double totalPrice;

@@ -18,52 +18,52 @@ import com.vcube.NotificationService.dto.BookingResponseDto;
 @Configuration
 public class KafkaConsumerConfig {
 
-    @Bean
-    public ConsumerFactory<String, BookingResponseDto> consumerFactory() {
+        @Bean
+        public ConsumerFactory<String, BookingResponseDto> consumerFactory() {
 
-        JsonDeserializer<BookingResponseDto> deserializer = new JsonDeserializer<>(BookingResponseDto.class);
+                JsonDeserializer<BookingResponseDto> deserializer = new JsonDeserializer<>(BookingResponseDto.class);
 
-        deserializer.addTrustedPackages("*");
-        deserializer.setUseTypeHeaders(false);
+                deserializer.addTrustedPackages("*");
+                deserializer.setUseTypeHeaders(false);
 
-        Map<String, Object> props = new HashMap<>();
+                Map<String, Object> props = new HashMap<>();
 
-        props.put(
-                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                System.getenv().getOrDefault(
-                        "KAFKA_BOOTSTRAP_SERVERS",
-                        "localhost:9092"));
+                props.put(
+                                ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                                System.getenv().getOrDefault(
+                                                "KAFKA_BOOTSTRAP_SERVERS",
+                                                "kafka:9092"));
 
-        props.put(
-                ConsumerConfig.GROUP_ID_CONFIG,
-                "notification-group-v2");
+                props.put(
+                                ConsumerConfig.GROUP_ID_CONFIG,
+                                "notification-group-v2");
 
-        props.put(
-                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
-                StringDeserializer.class);
+                props.put(
+                                ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+                                StringDeserializer.class);
 
-        props.put(
-                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                deserializer);
+                props.put(
+                                ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
+                                deserializer);
 
-        return new DefaultKafkaConsumerFactory<>(
-                props,
-                new StringDeserializer(),
-                deserializer);
-    }
+                return new DefaultKafkaConsumerFactory<>(
+                                props,
+                                new StringDeserializer(),
+                                deserializer);
+        }
 
-    @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, BookingResponseDto> kafkaListenerContainerFactory() {
+        @Bean
+        public ConcurrentKafkaListenerContainerFactory<String, BookingResponseDto> kafkaListenerContainerFactory() {
 
-        ConcurrentKafkaListenerContainerFactory<String, BookingResponseDto> factory = new ConcurrentKafkaListenerContainerFactory<>();
+                ConcurrentKafkaListenerContainerFactory<String, BookingResponseDto> factory = new ConcurrentKafkaListenerContainerFactory<>();
 
-        factory.setConsumerFactory(consumerFactory());
+                factory.setConsumerFactory(consumerFactory());
 
-        return factory;
-    }
+                return factory;
+        }
 
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
+        @Bean
+        public RestTemplate restTemplate() {
+                return new RestTemplate();
+        }
 }

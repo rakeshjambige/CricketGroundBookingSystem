@@ -21,3 +21,6 @@ bookmyground-frontend/.env
 
 # Logs
 *.log
+
+# Local environment secrets
+.env

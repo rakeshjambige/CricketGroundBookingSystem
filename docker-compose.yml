@@ -39,6 +39,13 @@ services:
     restart: unless-stopped
     ports:
       - "9090:9090"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: cricketbookingsystem
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       - mysql
 
@@ -51,6 +58,13 @@ services:
     restart: unless-stopped
     ports:
       - "9191:9191"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: cricketbookingsystem
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       - mysql
 
@@ -64,8 +78,13 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: cricketbookingsystem
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      JWT_SECRET: ${JWT_SECRET}
     depends_on:
       - mysql
       - kafka
@@ -81,13 +100,18 @@ services:
       - "8083:8083"
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
     depends_on:
       - kafka
+
   frontend:
     build:
       context: ./bookmyground-frontend
       dockerfile: Dockerfile
+    image: bookmyground-frontend:latest
     container_name: bookmyground-frontend
+    restart: unless-stopped
     ports:
       - "3000:80"
     depends_on:

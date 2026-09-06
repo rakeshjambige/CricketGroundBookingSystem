@@ -12,7 +12,10 @@ import com.vcube.BookingService.service.BookingService;
 
 @RestController
 @RequestMapping("/api/bookings")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+    "http://localhost:3000",
+    "http://44.192.87.4:3000"
+})
 public class BookingController {
 
     @Autowired

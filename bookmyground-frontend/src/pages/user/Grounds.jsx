@@ -368,7 +368,7 @@ function Grounds() {
       ====================================================== */}
 
       <div
-        className="card shadow mb-4 position-relative"
+        className="card shadow mb-4 position-relative ground-image-card"
         style={{ height: "450px" }}
       >
         <img
@@ -432,7 +432,7 @@ function Grounds() {
           GROUND DETAILS + BOOKING
       ====================================================== */}
 
-      <div className="card shadow p-4">
+      <div className="card shadow p-4 booking-card">
 
         <h3>{ground.name}</h3>
 
@@ -500,7 +500,7 @@ function Grounds() {
             <div className="spinner-border text-primary"></div>
           </div>
         ) : (
-          <div className="d-flex flex-wrap">
+          <div className="d-flex flex-wrap booking-slots">
 
             {hours.map((h) => {
 
@@ -509,6 +509,7 @@ function Grounds() {
               return (
                 <div
                   key={h}
+                  className="booking-slot"
                   onClick={() =>
                     handleSlotClick(h)
                   }

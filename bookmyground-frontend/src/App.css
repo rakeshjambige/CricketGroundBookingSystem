@@ -36,3 +36,21 @@
     transform: rotate(360deg);
   }
 }
+/* Mobile Responsive Design */
+@media (max-width: 576px) {
+  .ground-image-card {
+    height: 250px !important;
+  }
+
+  .booking-card {
+    padding: 16px !important;
+  }
+
+  .booking-slot {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 0 !important;
+    margin: 0 !important;
+    font-size: 13px;
+    padding: 10px 5px !important;
+  }
+}

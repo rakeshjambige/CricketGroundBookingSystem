@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:9090/api/userauth"; // your backend auth service
+const BASE_URL = "http://44.192.87.4:9090/api/userauth"; // your backend auth service
 
 export const login = async (data) => {
   const res = await axios.post(`${BASE_URL}/login`, data);

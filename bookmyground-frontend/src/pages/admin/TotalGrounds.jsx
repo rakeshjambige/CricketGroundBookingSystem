@@ -16,7 +16,7 @@ function TotalGrounds() {
         const slotsData = {};
         for (let g of data) {
           const res = await axios.get(
-            `http://localhost:8081/api/bookings/slots/${g.id}?date=${new Date().toISOString().split("T")[0]}`,
+            `http://44.192.87.4:8081/api/bookings/slots/${g.id}?date=${new Date().toISOString().split("T")[0]}`,
             { headers: { Authorization: `Bearer ${getToken()}` } }
           );
           const booked = res.data.length;

@@ -86,7 +86,7 @@ function Grounds() {
 
     try {
       const res = await axios.get(
-        `http://localhost:8081/api/bookings/slots/${ground.id}?date=${date}`,
+        `http://44.192.87.4:8081/api/bookings/slots/${ground.id}?date=${date}`,
         {
           headers: {
             Authorization: `Bearer ${getToken()}`,
@@ -285,7 +285,7 @@ function Grounds() {
       setBookingLoading(true);
 
       await axios.post(
-        "http://localhost:8081/api/bookings",
+        "http://44.192.87.4:8081/api/bookings",
         {
           userId: user.id,
           groundId: ground.id,

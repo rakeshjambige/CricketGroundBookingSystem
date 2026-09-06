@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.vcube.UserAndAuthService.model.User;
 import com.vcube.UserAndAuthService.service.UserService;
 
-@CrossOrigin(origins = "http://localhost:3000") // React frontend URL
+@CrossOrigin(origins = "http://44.192.87.4:3000") // React frontend URL
 @RestController
 @RequestMapping("/api/userauth")
 public class UserController {

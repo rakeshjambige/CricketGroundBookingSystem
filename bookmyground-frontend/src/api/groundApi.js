@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getToken } from "../utils/auth";
 
-const BASE_URL = "http://localhost:9191/api/grounds";
+const BASE_URL = "http://44.192.87.4:9191/api/grounds";
 
 // Auth headers (for admin/user)
 const authConfig = () => ({

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getToken, getUser } from "../utils/auth";
 
-const BASE_URL = "http://localhost:8081/api/bookings";
+const BASE_URL = "http://44.192.87.4:8081/api/bookings";
 
 
 const authConfig = () => ({
